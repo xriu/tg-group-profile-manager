@@ -25,6 +25,11 @@ async function loadProfiles(app) {
     if (typeof profileConfig.groupPermissions !== "object") {
         profileConfig.groupPermissions = {};
     }
+    // Set defaults for notification config
+    if (typeof profileConfig.notification !== "object") {
+        profileConfig.notification = {};
+    }
+    profileConfig.notification.expired = profileConfig.notification.expired !== false;
     if (!Array.isArray(profileConfig.profiles)) {
         console.warn("No profiles set in config");
         profileConfig.profiles = [];

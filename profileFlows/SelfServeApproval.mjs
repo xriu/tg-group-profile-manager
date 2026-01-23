@@ -627,53 +627,61 @@ export class SelfServeApproval extends BaseProfile {
             text: `${SelfServeApproval.REVOKE_ACCESS_MESSAGE}${JSON.stringify(request)}`,
         })
 
-        // approver message
-        let messageString = `<@${request.requesterSlackId}> profile _'${this.profileName}'_ access expired.\nGroup: ${request.requestedGroupName}\nDuration: ${request.selectedTime} (Start from the time of approval)\nReason For Request: ${request.reasonForRequest} \nApproved By <@${request.approverSlackId}>\n\`Access Expired\``
-        let msgOption = {
-            channel: request.approverSlackId,
-            text: messageString,
-            blocks: [
-                {
-                    type: 'section',
-                    text: {
-                        type: 'mrkdwn',
-                        text: messageString
-                    }
-                }
-            ]
-        }
-        try {
-            await client.chat.postMessage(msgOption)
-        } catch(e) {
-            logger.error(e)
-        }
-
         const requestObj = (({ requestId, ...o }) => o)(request)
         requestObj.status = "Access Expired"
         console.log(JSON.stringify(requestObj))
 
-        if (request.approverSlackId === request.requesterSlackId) return
+        // Check if expiration notification should be sent at all
+        const sendExpiredMessage = this.profileConfig.notification?.expired?.message !== false;
 
-        // requester message
-        messageString = `Profile _'${this.profileName}'_ access expired.\nGroup: ${request.requestedGroupName}\nDuration: ${request.selectedTime} (Start from the time of approval)\nApproved By <@${request.approverSlackId}>\n\`Access Expired\``
-        msgOption = {
-            channel: request.requesterSlackId,
-            text: messageString,
-            blocks: [
-                {
-                    type: 'section',
-                    text: {
-                        type: 'mrkdwn',
-                        text: messageString
+        if (sendExpiredMessage) {
+            // Conditionally include mentions based on notification.expired.mention setting
+            const useMentions = this.profileConfig.notification?.expired?.mention !== false;
+            let messageString = useMentions
+                ? `<@${request.requesterSlackId}> profile _'${this.profileName}'_ access expired.\nGroup: ${request.requestedGroupName}\nDuration: ${request.selectedTime} (Start from the time of approval)\nReason For Request: ${request.reasonForRequest} \nApproved By <@${request.approverSlackId}>\n\`Access Expired\``
+                : `Profile _'${this.profileName}'_ access expired.\nGroup: ${request.requestedGroupName}\nDuration: ${request.selectedTime} (Start from the time of approval)\nReason For Request: ${request.reasonForRequest}\n\`Access Expired\``
+            let msgOption = {
+                channel: request.approverSlackId,
+                text: messageString,
+                blocks: [
+                    {
+                        type: 'section',
+                        text: {
+                            type: 'mrkdwn',
+                            text: messageString
+                        }
                     }
-                }
-            ]
-        }
+                ]
+            }
+            try {
+                await client.chat.postMessage(msgOption)
+            } catch(e) {
+                logger.error(e)
+            }
 
-        try {
-            await client.chat.postMessage(msgOption)
-        } catch(e) {
-            logger.error(e)
+            if (request.approverSlackId === request.requesterSlackId) return
+
+            // requester message
+            messageString = `Profile _'${this.profileName}'_ access expired.\nGroup: ${request.requestedGroupName}\nDuration: ${request.selectedTime} (Start from the time of approval)\nApproved By <@${request.approverSlackId}>\n\`Access Expired\``
+            msgOption = {
+                channel: request.requesterSlackId,
+                text: messageString,
+                blocks: [
+                    {
+                        type: 'section',
+                        text: {
+                            type: 'mrkdwn',
+                            text: messageString
+                        }
+                    }
+                ]
+            }
+
+            try {
+                await client.chat.postMessage(msgOption)
+            } catch(e) {
+                logger.error(e)
+            }
         }
 
     }
