@@ -29,7 +29,13 @@ async function loadProfiles(app) {
     if (typeof profileConfig.notification !== "object") {
         profileConfig.notification = {};
     }
-    profileConfig.notification.expired = profileConfig.notification.expired !== false;
+
+    // Set defaults for expired notification config
+    if (typeof profileConfig.notification.expired !== "object") {
+        profileConfig.notification.expired = { message: true, mention: true };
+    }
+
+    // Set defaults for profiles config
     if (!Array.isArray(profileConfig.profiles)) {
         console.warn("No profiles set in config");
         profileConfig.profiles = [];
