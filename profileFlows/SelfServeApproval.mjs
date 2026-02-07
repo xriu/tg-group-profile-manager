@@ -272,6 +272,32 @@ export class SelfServeApproval extends BaseProfile {
                 ]
             }
             await client.chat.postMessage(msgOption)
+
+            // Notify notification groups (read-only, no approval buttons)
+            if (Array.isArray(this.notificationGroups) && this.notificationGroups.length > 0) {
+                for (const notificationGroupName of this.notificationGroups) {
+                    try {
+                        const notificationGroup = await profileManager.lookUpGroupUsersByName(notificationGroupName);
+                        if (!notificationGroup) continue;
+                        for (const member of notificationGroup.users) {
+                            // if (member.email === tgUser.email) continue;
+                            try {
+                                const memberSlackInfo = await client.users.lookupByEmail({ email: member.email });
+                                let notifMessage = `<@${slackUserId}> self-approved access through profile _'${this.profileName}'_.\nGroup: ${selectedGroup}\nDuration: ${selectedTime}\nReason: ${reasonForRequest}\n\`Self Approved\``;
+                                await client.chat.postMessage({
+                                    channel: memberSlackInfo.user.id,
+                                    text: notifMessage,
+                                    blocks: [{
+                                        type: 'section',
+                                        text: { type: 'mrkdwn', text: notifMessage }
+                                    }]
+                                });
+                            } catch (e) { console.warn(e); }
+                        }
+                    } catch (e) { console.warn(e); }
+                }
+            }
+
             return
         }
 
@@ -600,6 +626,31 @@ export class SelfServeApproval extends BaseProfile {
                 ]
             }
             await client.chat.postMessage(msgOption)
+
+            // Notify notification groups (read-only, no approval buttons)
+            if (Array.isArray(this.notificationGroups) && this.notificationGroups.length > 0) {
+                for (const notificationGroupName of this.notificationGroups) {
+                    try {
+                        const notificationGroup = await profileManager.lookUpGroupUsersByName(notificationGroupName);
+                        if (!notificationGroup) continue;
+                        for (const member of notificationGroup.users) {
+                            // if (member.email === request.requesterEmail) continue;
+                            try {
+                                const memberSlackInfo = await client.users.lookupByEmail({ email: member.email });
+                                let notifMessage = `<@${request.requesterSlackId}> was granted access through profile _'${this.profileName}'_.\nGroup: ${request.requestedGroupName}\nDuration: ${request.selectedTime}\nReason: ${request.reasonForRequest}\n\`Approved By\` <@${body.user.id}>`;
+                                await client.chat.postMessage({
+                                    channel: memberSlackInfo.user.id,
+                                    text: notifMessage,
+                                    blocks: [{
+                                        type: 'section',
+                                        text: { type: 'mrkdwn', text: notifMessage }
+                                    }]
+                                });
+                            } catch (e) { console.warn(e); }
+                        }
+                    } catch (e) { console.warn(e); }
+                }
+            }
         }
     }
 

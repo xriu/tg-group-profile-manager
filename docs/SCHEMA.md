@@ -18,6 +18,7 @@ This object defines a single profile
 - _applicableToGroup_: String, a Twingate group that a user must be in for them to see this profile. _Default_: "Everyone"
 - _approverGroup_: String, `selfServerApproval` specific, a Twingate group a user must be in for them to approve the access request of the Profile. The group size should not exceed 20 members. _Required_.
 - _timeOptions_: Enum, `selfServerApproval` specific, the duration options requesters can select during access request. Must be one of `Forever`, `1h`, `2h`, `4h`, `6h`, `8h`, `12h`, `24h`, `2d`, `3d`,`4d`, `5d`, `6d`, `7d`, `14d`,`21d`,`30d`, `60d`, `90d`. _Default_: `[Forever]`
+- _notificationGroups_: Array of String, `selfServeApproval` specific, Twingate group names whose members receive a read-only notification DM when access is granted (self-approved or approved). No approve/reject buttons. _Optional_.
 - _groups_:
   - _oneOf_: List of String, Twingate groups within the profile which the users can switch between. _Required_.
   - _selfServeApproval_: List of String, Twingate groups within the profile which the users can request access to. _Required_
@@ -39,7 +40,8 @@ This object defines a single profile
       "groups": ["HR", "Finance", "Sales"],
       "timeOptions": ["Forever", "1h", "8h", "24h", "7d", "30d", "90d"],
       "applicableToGroup": "Everyone",
-      "approverGroup": "IT"
+      "approverGroup": "IT",
+      "notificationGroups": ["SRE"]
     }
   ],
   "groupPermissions": {
@@ -68,3 +70,4 @@ In the example above:
 - Any users that can access the profile can request access to groups `HR`, `Finance` and `Sales`
 - Any users that can access the profile can select access duration `Forever`, `1h`, `8h`, `24h`, `7d`, `30d` and `90d`
 - The request can be only be approved by the group `IT` members
+- Members of the `SRE` group will receive a read-only notification DM when access is granted (no approve/reject buttons)
